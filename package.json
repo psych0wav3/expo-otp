@@ -1,7 +1,7 @@
 {
   "name": "expo-otp",
-  "version": "0.1.0",
-  "description": "OTP SMS Autoverification",
+  "version": "0.1.1",
+  "description": "OTP SMS verify for Expo (Android only)",
   "main": "build/index.js",
   "types": "build/index.d.ts",
   "scripts": {

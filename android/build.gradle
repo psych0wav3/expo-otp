@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
 
 group = 'expo.modules.otp'
 version = '0.1.0'
@@ -21,6 +22,10 @@ if (useManagedAndroidSdkVersions) {
     ext.safeExtGet = { prop, fallback ->
       rootProject.ext.has(prop) ? rootProject.ext.get(prop) : fallback
     }
+
+    repositories {
+    mavenCentral()
+  }
   }
   project.android {
     compileSdkVersion safeExtGet("compileSdkVersion", 34)
@@ -43,7 +48,6 @@ android {
 }
 
 dependencies {
-  implementation("com.facebook.react:react-native:+")
   implementation 'com.google.android.gms:play-services-auth:21.0.0'
   implementation 'com.google.android.gms:play-services-auth-api-phone:18.0.2'
 }
