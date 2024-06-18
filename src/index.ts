@@ -1,26 +1,32 @@
-import { NativeModulesProxy, EventEmitter, Subscription } from 'expo-modules-core';
+import {
+  NativeModulesProxy,
+  EventEmitter,
+  Subscription,
+} from "expo-modules-core";
+import { Platform } from "react-native";
 
-// Import the native module. On web, it will be resolved to ExpoOtp.web.ts
-// and on native platforms to ExpoOtp.ts
-import ExpoOtpModule from './ExpoOtpModule';
-import ExpoOtpView from './ExpoOtpView';
-import { ChangeEventPayload, ExpoOtpViewProps } from './ExpoOtp.types';
+import ExpoOtpModule from "./ExpoOtpModule";
 
-// Get the native constant value.
-export const PI = ExpoOtpModule.PI;
-
-export function hello(): string {
-  return ExpoOtpModule.hello();
-}
-
-export async function setValueAsync(value: string) {
-  return await ExpoOtpModule.setValueAsync(value);
-}
+export { useOneTimePassword } from "./useOneTimePassword";
 
 const emitter = new EventEmitter(ExpoOtpModule ?? NativeModulesProxy.ExpoOtp);
 
-export function addChangeListener(listener: (event: ChangeEventPayload) => void): Subscription {
-  return emitter.addListener<ChangeEventPayload>('onChange', listener);
-}
+const isAndroid = Platform.OS === "android";
 
-export { ExpoOtpView, ExpoOtpViewProps, ChangeEventPayload };
+export const getHash = () => {
+  return isAndroid && ExpoOtpModule.getHash();
+};
+
+export const startAndListener = async (
+  listener: (value: string) => void,
+): Promise<Subscription> => {
+  if (isAndroid) {
+    await ExpoOtpModule.startSmsRetrieverAsync();
+    return emitter.addListener("OptEventSms", listener);
+  }
+  return {} as Subscription;
+};
+
+export const removeListener = () => {
+  return isAndroid && emitter.removeAllListeners("OptEventSms");
+};

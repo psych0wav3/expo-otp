@@ -41,3 +41,9 @@ android {
     abortOnError false
   }
 }
+
+dependencies {
+  implementation("com.facebook.react:react-native:+")
+  implementation 'com.google.android.gms:play-services-auth:21.0.0'
+  implementation 'com.google.android.gms:play-services-auth-api-phone:18.0.2'
+}

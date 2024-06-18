@@ -2,46 +2,46 @@ package expo.modules.otp
 
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import android.os.Bundle
+import android.content.Context
+import expo.modules.kotlin.exception.Exceptions
+import expo.modules.kotlin.Promise
+
+internal const val OTP_EVENT_SMS = "OptEventSms"
 
 class ExpoOtpModule : Module() {
-  // Each module class must implement the definition function. The definition consists of components
-  // that describes the module's functionality and behavior.
-  // See https://docs.expo.dev/modules/module-api for more details about available components.
+
+  private val emitEvent = { body: Bundle ->
+    try {
+      this@ExpoOtpModule.sendEvent(OTP_EVENT_SMS, body)
+    } catch (_: Throwable) {
+    }
+  }
+
+  private val context: Context
+    get() = appContext.reactContext ?: throw Exceptions.ReactContextLost()
+
+  private val otpService = ExpoOtpService(emitEvent)
   override fun definition() = ModuleDefinition {
-    // Sets the name of the module that JavaScript code will use to refer to the module. Takes a string as an argument.
-    // Can be inferred from module's class name, but it's recommended to set it explicitly for clarity.
-    // The module will be accessible from `requireNativeModule('ExpoOtp')` in JavaScript.
     Name("ExpoOtp")
 
-    // Sets constant properties on the module. Can take a dictionary or a closure that returns a dictionary.
-    Constants(
-      "PI" to Math.PI
-    )
+    Events(OTP_EVENT_SMS)
 
-    // Defines event names that the module can send to JavaScript.
-    Events("onChange")
-
-    // Defines a JavaScript synchronous function that runs the native code on the JavaScript thread.
-    Function("hello") {
-      "Hello world! 👋"
+    OnCreate {
+      otpService.registerOtpBroadcastReceiver(context)
     }
 
-    // Defines a JavaScript function that always returns a Promise and whose native code
-    // is by default dispatched on the different thread than the JavaScript runtime runs on.
-    AsyncFunction("setValueAsync") { value: String ->
-      // Send an event to JavaScript.
-      sendEvent("onChange", mapOf(
-        "value" to value
-      ))
+    OnDestroy {
+      otpService.unregisterOtpBroadcastReceivers(context)
     }
 
-    // Enables the module to be used as a native view. Definition components that are accepted as part of
-    // the view definition: Prop, Events.
-    View(ExpoOtpView::class) {
-      // Defines a setter for the `name` prop.
-      Prop("name") { view: ExpoOtpView, prop: String ->
-        println(prop)
-      }
+    AsyncFunction("startSmsRetrieverAsync") { promise: Promise ->
+      otpService.startSmsRetriever(context, promise)
     }
+
+    Function("getHash") {
+      return@Function otpService.getHash(context)
+    }
+
   }
 }
